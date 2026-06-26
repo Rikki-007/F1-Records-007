@@ -3,9 +3,400 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>F1 VERTEX // QUANTUM APEX</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;700&display=swap');
+
+        :root {
+            --bg-deep: #060608;
+            --surface-card: #0f0f14;
+            --f1-red: #ff1e27;
+            --neon-shadow: rgba(255, 30, 39, 0.35);
+            --text-pure: #ffffff;
+            --text-muted: #7e7e8c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-deep); color: var(--text-pure);
+            font-family: 'Rajdhani', sans-serif; min-height: 100vh; overflow-x: hidden;
+            background-image: linear-gradient(rgba(15,15,20,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(15,15,20,0.5) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* HUD Header Navigation */
+        header {
+            background: #000; border-bottom: 3px solid var(--f1-red);
+            padding: 1rem 2rem; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+        }
+        .hud-wrapper { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; font-style: italic; }
+        .logo span { color: var(--f1-red); }
+        
+        nav button {
+            background: transparent; border: none; color: var(--text-muted);
+            font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 900;
+            padding: 0.6rem 1.4rem; cursor: pointer; transform: skewX(-12deg); transition: all 0.2s;
+        }
+        nav button.active, nav button:hover { color: #fff; background: var(--f1-red); box-shadow: 0 0 15px var(--neon-shadow); }
+
+        /* Main Arena Framework */
+        .arena { max-width: 1400px; margin: 2rem auto; padding: 0 2rem; }
+        .app-sector { display: none; }
+        .app-sector.active { display: block; }
+
+        /* Control HUD Strips */
+        .control-strip {
+            background: var(--surface-card); padding: 1.2rem; margin-bottom: 2rem;
+            border-left: 4px solid var(--f1-red); display: flex; gap: 1rem; align-items: center;
+        }
+        .hud-input {
+            background: #000; border: 1px solid #2a2a35; color: #fff;
+            padding: 0.6rem 1rem; font-family: inherit; font-size: 1rem; border-radius: 4px; width: 100%; max-width: 350px;
+        }
+        .hud-input:focus { border-color: var(--f1-red); outline: none; }
+        
+        .hud-select {
+            background: #000; border: 1px solid #2a2a35; color: #fff;
+            padding: 0.6rem 1.5rem; font-family: inherit; font-size: 1rem; border-radius: 4px; cursor: pointer;
+        }
+
+        /* Dynamic Grid Layouts */
+        .telemetry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        
+        .datacard {
+            background: var(--surface-card); border: 1px solid #1a1a24;
+            padding: 1.5rem; border-radius: 4px; position: relative; transition: all 0.3s;
+        }
+        .datacard:hover { border-color: var(--f1-red); transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+        .tag {
+            background: #161622; color: var(--f1-red); border: 1px solid var(--f1-red);
+            padding: 0.15rem 0.5rem; font-size: 0.75rem; font-family: 'Orbitron', sans-serif;
+            font-weight: 900; display: inline-block; margin-bottom: 0.8rem;
+        }
+
+        .action-trigger {
+            width: 100%; background: transparent; border: 2px solid var(--f1-red); color: #fff;
+            font-family: 'Orbitron', sans-serif; padding: 0.6rem; font-weight: 900; cursor: pointer;
+            margin-top: 1rem; transition: all 0.2s; text-transform: uppercase;
+        }
+        .action-trigger:hover { background: var(--f1-red); box-shadow: 0 0 12px var(--neon-shadow); }
+
+        /* Status Indicators */
+        .loader { font-family: 'Orbitron', sans-serif; color: var(--f1-red); font-size: 1.2rem; text-align: center; padding: 3rem 0; width: 100%; }
+
+        /* Fullscreen Overlay Data Terminals */
+        .overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(4,4,6,0.96); backdrop-filter: blur(10px); z-index: 1000;
+            justify-content: center; align-items: center; padding: 1rem;
+        }
+        .modal-mainframe {
+            background: #0b0b0f; border: 2px solid var(--f1-red); width: 95%; max-width: 800px;
+            max-height: 85vh; overflow-y: auto; padding: 2.5rem; position: relative; border-radius: 6px;
+            box-shadow: 0 0 40px var(--neon-shadow);
+        }
+        .exit-trigger { position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem; color: var(--f1-red); cursor: pointer; }
+
+        /* Standings Data Tables Layout */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 1.1rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #1a1a24; }
+        th { font-family: 'Orbitron', sans-serif; color: var(--f1-red); text-transform: uppercase; font-size: 0.85rem; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+    </style>
 </head>
 <body>
-    
+
+    <header>
+        <div class="hud-wrapper">
+            <div class="logo">F1//<span>VERTEX</span></div>
+            <nav>
+                <button class="tab-link active" onclick="switchSector('all-drivers')">All-Time Drivers</button>
+                <button class="tab-link" onclick="switchSector('vault-engine')">Championship Vault</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="arena">
+        
+        <!-- SECTOR 1: Historical Driver Directory (750+ Historical Drivers via Data Streams) -->
+        <section id="all-drivers" class="app-sector active">
+            <div class="control-strip">
+                <input type="text" class="hud-input" id="driver-query" placeholder="Query historical driver database..." oninput="searchDriversLive()">
+                <div style="font-size:0.9rem; color:var(--text-muted);" id="counter-display">Querying telemetry database...</div>
+            </div>
+            <div class="telemetry-grid" id="driver-grid-target">
+                <div class="loader">SYNCING MOTORSPORT DATABASE CORES...</div>
+            </div>
+        </section>
+
+        <!-- SECTOR 2: Historical Season Standings Engine & Race Breakdowns -->
+        <section id="vault-engine" class="app-sector">
+            <div class="control-strip">
+                <label style="font-family:'Orbitron'; font-weight:900; font-size:0.9rem;">SELECT ERA YEAR:</label>
+                <select class="hud-select" id="season-selector" onchange="loadSeasonDataStream()"></select>
+            </div>
+            
+            <h2 style="font-family:'Orbitron'; margin-bottom:1rem; border-left: 4px solid var(--f1-red); padding-left:10px;">Driver Standings (WDC)</h2>
+            <div id="wdc-target" style="margin-bottom: 3rem;"></div>
+
+            <h2 style="font-family:'Orbitron'; margin-bottom:1rem; border-left: 4px solid var(--f1-red); padding-left:10px;">Constructor Standings (WCC)</h2>
+            <div id="wcc-target" style="margin-bottom: 3rem;"></div>
+
+            <h2 style="font-family:'Orbitron'; margin-bottom:1rem; border-left: 4px solid var(--f1-red); padding-left:10px;">Individual Grand Prix Events</h2>
+            <div class="telemetry-grid" id="races-target"></div>
+        </section>
+
+    </div>
+
+    <!-- MAIN CONSOLE DATA MODAL SYSTEM -->
+    <div id="console-modal" class="overlay" onclick="closeConsole()">
+        <div class="modal-mainframe" onclick="event.stopPropagation()">
+            <span class="exit-trigger" onclick="closeConsole()">&times;</span>
+            <div id="modal-hydrator"></div>
+        </div>
+    </div>
+
+    <script>
+        // GLOBAL SYSTEM REGISTRIES
+        let globalDriversRegistry = [];
+        const baseEndpoint = "https://api.jolpi.ca/ergast/f1"; // Ergast open-source fallback engine
+
+        // INITIAL PLATFORM BOOT PIPELINE
+        window.onload = async () => {
+            generateSeasonDropdownOptions();
+            await populateAllHistoricalDrivers();
+            loadSeasonDataStream();
+        };
+
+        function switchSector(sectorId) {
+            document.querySelectorAll('.app-sector').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+            document.getElementById(sectorId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function generateSeasonDropdownOptions() {
+            const select = document.getElementById('season-selector');
+            let optionsHTML = '';
+            // Generate historical select bounds from 2026 down to inaugural 1950 season
+            for (let year = 2026; year >= 1950; year--) {
+                optionsHTML += `<option value="${year}">${year} Season</option>`;
+            }
+            select.innerHTML = optionsHTML;
+        }
+
+        // ASYNC FETCH 1: Ingesting ALL historical drivers who have touched a wheel
+        async function populateAllHistoricalDrivers() {
+            try {
+                // Requesting standard safety ceiling limits to load historical participant structures
+                const response = await fetch(`${baseEndpoint}/drivers.json?limit=10000`);
+                const payload = await response.json();
+                globalDriversRegistry = payload.MRData.DriverTable.Drivers;
+                displayDrivers(globalDriversRegistry.slice(0, 60)); // Render initial chunk for performance safety
+                document.getElementById('counter-display').innerText = `Database Tracked Objects: ${globalDriversRegistry.length} Drivers`;
+            } catch (err) {
+                document.getElementById('driver-grid-target').innerHTML = `<div class="loader">STREAM INTERRUPTION: FAILED TO ATTAIN TELEMETRY DATA CORES.</div>`;
+            }
+        }
+
+        function displayDrivers(driversList) {
+            const grid = document.getElementById('driver-grid-target');
+            if (driversList.length === 0) {
+                grid.innerHTML = `<div class="loader" style="color:#fff;">NO DRIVER RECORD PATHS DETECTED WITHIN QUERY PARAMETERS</div>`;
+                return;
+            }
+            grid.innerHTML = driversList.map(d => `
+                <div class="datacard">
+                    <span class="tag">${d.nationality}</span>
+                    <h3 style="font-family:'Orbitron'; font-size:1.4rem;">${d.givenName} ${d.familyName}</h3>
+                    <p style="color:var(--text-muted); margin-top:0.25rem;">Birth: ${d.dateOfBirth || 'N/A'}</p>
+                    <button class="action-trigger" onclick="inspectSingleDriver('${d.driverId}')">View Bio File</button>
+                </div>
+            `).join('');
+        }
+
+        function searchDriversLive() {
+            const query = document.getElementById('driver-query').value.toLowerCase().trim();
+            if(!query) {
+                displayDrivers(globalDriversRegistry.slice(0, 60));
+                return;
+            }
+            const matchSet = globalDriversRegistry.filter(d => 
+                d.givenName.toLowerCase().includes(query) || 
+                d.familyName.toLowerCase().includes(query) ||
+                d.nationality.toLowerCase().includes(query)
+            );
+            displayDrivers(matchSet.slice(0, 100)); // Render up to 100 matches live
+        }
+
+        // ASYNC FETCH 2: Deep Profiler Individual Analysis Stream
+        async function inspectSingleDriver(driverId) {
+            openConsoleBlank("<div class='loader'>ACCESSING TARGET DOSSIER ARRAYS...</div>");
+            try {
+                // Intersect driver data parameters alongside historical race wins allocation variables
+                const dResp = await fetch(`${baseEndpoint}/drivers/${driverId}.json`);
+                const dData = await dResp.json();
+                const d = dData.MRData.DriverTable.Drivers[0];
+
+                const wResp = await fetch(`${baseEndpoint}/drivers/${driverId}/results/1.json?limit=1`);
+                const wData = await wResp.json();
+                const absoluteWins = wData.MRData.total;
+
+                document.getElementById('modal-hydrator').innerHTML = `
+                    <h2 style="font-family:'Orbitron'; font-size:2.5rem; text-transform:uppercase; font-style:italic;">${d.givenName} ${d.familyName}</h2>
+                    <h4 style="color:var(--f1-red); font-family:'Orbitron'; margin-bottom:1.5rem;">NATIONALITY PROFILE: ${d.nationality}</h4>
+                    <p style="font-size:1.2rem; line-height:1.7; margin-bottom:1.5rem;">
+                        This athlete officially entered the historical F1 operational grid matrix under historical identification register code <strong>"${d.driverId}"</strong>. 
+                        Records show a birth metric logging sequence on <strong>${d.dateOfBirth}</strong>.
+                    </p>
+                    <div style="background:#111; padding:1.2rem; border-left:3px solid var(--f1-red); font-family:'Orbitron'; font-size:1.1rem;">
+                        TOTAL HISTORICAL GP VICTORIES RECORDED: <span style="color:var(--f1-red); font-weight:900; font-size:1.4rem;">${absoluteWins}</span>
+                    </div>
+                    <a href="${d.url}" target="_blank" class="action-trigger" style="display:inline-block; text-align:center; text-decoration:none; margin-top:2rem; width:auto; padding:0.8rem 2rem;">Access Deep Biographical Database</a>
+                `;
+            } catch {
+                document.getElementById('modal-hydrator').innerHTML = "Telemetry runtime conversion exception.";
+            }
+        }
+
+        // ASYNC FETCH 3: Ingest Complete Dynamic Season Datastream Framework (WDC, WCC, and Event Collections)
+        async function loadSeasonDataStream() {
+            const targetYear = document.getElementById('season-selector').value;
+            
+            document.getElementById('wdc-target').innerHTML = "<div class='loader'>INGESTING DRIVER CHAMPIONSHIP CORE STANDINGS...</div>";
+            document.getElementById('wcc-target').innerHTML = "<div class='loader'>INGESTING CONSTRUCTOR CHAMPIONSHIP CORE STANDINGS...</div>";
+            document.getElementById('races-target').innerHTML = "<div class='loader'>INGESTING SEASON EVENT CALENDARS...</div>";
+
+            // Executing cross-functional execution processes in parallel
+            loadWDC(targetYear);
+            loadWCC(targetYear);
+            loadRaces(targetYear);
+        }
+
+        async function loadWDC(year) {
+            try {
+                const r = await fetch(`${baseEndpoint}/${year}/driverStandings.json`);
+                const d = await r.json();
+                const lists = d.MRData.StandingsTable.StandingsLists[0]?.DriverStandings || [];
+                
+                if(lists.length === 0) {
+                    document.getElementById('wdc-target').innerHTML = "<p style='color:var(--text-muted)'>Data parameters for this structural element are pending synchronization cycle execution updates.</p>";
+                    return;
+                }
+
+                document.getElementById('wdc-target').innerHTML = `
+                    <table>
+                        <thead>
+                            <tr><th>POS</th><th>DRIVER</th><th>CONSTRUCTOR</th><th>POINTS</th><th>WINS</th></tr>
+                        </thead>
+                        <tbody>
+                            ${lists.map(item => `
+                                <tr>
+                                    <td style="font-weight:bold; color:var(--f1-red)">${item.position}</td>
+                                    <td><strong>${item.Driver.givenName} ${item.Driver.familyName}</strong></td>
+                                    <td>${item.Constructors[0]?.name || 'N/A'}</td>
+                                    <td style="font-weight:bold;">${item.points}</td>
+                                    <td>${item.wins}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            } catch { document.getElementById('wdc-target').innerHTML = "Execution error sync."; }
+        }
+
+        async function loadWCC(year) {
+            try {
+                const r = await fetch(`${baseEndpoint}/${year}/constructorStandings.json`);
+                const d = await r.json();
+                const lists = d.MRData.StandingsTable.StandingsLists[0]?.ConstructorStandings || [];
+                
+                if(lists.length === 0) {
+                    document.getElementById('wcc-target').innerHTML = "<p style='color:var(--text-muted)'>No historic WCC registry allocation found for this tracking cycle or era.</p>";
+                    return;
+                }
+
+                document.getElementById('wcc-target').innerHTML = `
+                    <table>
+                        <thead>
+                            <tr><th>POS</th><th>CONSTRUCTOR</th><th>NATIONALITY</th><th>POINTS</th><th>WINS</th></tr>
+                        </thead>
+                        <tbody>
+                            ${lists.map(item => `
+                                <tr>
+                                    <td style="font-weight:bold; color:var(--f1-red)">${item.position}</td>
+                                    <td><strong>${item.Constructor.name}</strong></td>
+                                    <td>${item.Constructor.nationality}</td>
+                                    <td style="font-weight:bold;">${item.points}</td>
+                                    <td>${item.wins}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            } catch { document.getElementById('wcc-target').innerHTML = "Execution error sync."; }
+        }
+
+        async function loadRaces(year) {
+            try {
+                const r = await fetch(`${baseEndpoint}/${year}.json`);
+                const d = await r.json();
+                const races = d.MRData.RaceTable.Races || [];
+
+                document.getElementById('races-target').innerHTML = races.map(rc => `
+                    <div class="datacard">
+                        <span class="tag">ROUND ${rc.round}</span>
+                        <h3 style="font-family:'Orbitron'; font-size:1.3rem;">${rc.raceName}</h3>
+                        <p style="color:var(--text-muted); margin:0.25rem 0 1rem 0;">${rc.Circuit.circuitName}</p>
+                        <button class="action-trigger" onclick="inspectRaceResults('${year}', '${rc.round}')">View Complete Race Results</button>
+                    </div>
+                `).join('');
+            } catch { document.getElementById('races-target').innerHTML = "Execution error sync."; }
+        }
+
+        // ASYNC FETCH 4: Single Race Deep Dive Result Tables Ingest Engine
+        async function inspectRaceResults(year, round) {
+            openConsoleBlank("<div class='loader'>EXTRACTING GRAND PRIX PLACEMENT MAPS...</div>");
+            try {
+                const r = await fetch(`${baseEndpoint}/${year}/${round}/results.json`);
+                const d = await r.json();
+                const dataBlock = d.MRData.RaceTable.Races[0];
+
+                document.getElementById('modal-hydrator').innerHTML = `
+                    <h2 style="font-family:'Orbitron'; font-size:1.8rem; text-transform:uppercase;">${dataBlock.raceName}</h2>
+                    <h4 style="color:var(--f1-red); font-family:'Orbitron'; margin-bottom:1.5rem;">SEASON AREA ERA: ${year} // ROUND SCHEDULE ${round}</h4>
+                    <div style="max-height:50vh; overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr><th>POS</th><th>GRID</th><th>DRIVER</th><th>TEAM</th><th>POINTS</th><th>STATUS</th></tr>
+                            </thead>
+                            <tbody>
+                                ${dataBlock.Results.map(res => `
+                                    <tr>
+                                        <td style="font-weight:bold; color:var(--f1-red);">${res.positionText === 'R' ? 'DNF' : res.position}</td>
+                                        <td>${res.grid}</td>
+                                        <td><strong>${res.Driver.givenName} ${res.Driver.familyName}</strong></td>
+                                        <td>${res.Constructor.name}</td>
+                                        <td style="font-weight:bold;">${res.points}</td>
+                                        <td style="font-size:0.9rem; color:var(--text-muted);">${res.status}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch {
+                document.getElementById('modal-hydrator').innerHTML = "Race tracking structure is missing data entries.";
+            }
+        }
+
+        // DYNAMIC OVERLAY SYSTEMS CONTROLLERS
+        function openConsoleBlank(loaderMarkup) {
+            document.getElementById('modal-hydrator').innerHTML = loaderMarkup;
+            document.getElementById('console-modal').style.display = 'flex';
+        }
+        function closeConsole() { document.getElementById('console-modal').style.display = 'none'; }
+    </script>
 </body>
 </html>
