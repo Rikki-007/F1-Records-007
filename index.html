@@ -195,7 +195,7 @@
                 const response = await fetch(`${baseEndpoint}/drivers.json?limit=10000`);
                 const payload = await response.json();
                 globalDriversRegistry = payload.MRData.DriverTable.Drivers;
-                displayDrivers(globalDriversRegistry.slice(0, 60)); // Render initial chunk for performance safety
+                displayDrivers(globalDriversRegistry);// Render initial chunk for performance safety
                 document.getElementById('counter-display').innerText = `Database Tracked Objects: ${globalDriversRegistry.length} Drivers`;
             } catch (err) {
                 document.getElementById('driver-grid-target').innerHTML = `<div class="loader">STREAM INTERRUPTION: FAILED TO ATTAIN TELEMETRY DATA CORES.</div>`;
@@ -221,7 +221,7 @@
         function searchDriversLive() {
             const query = document.getElementById('driver-query').value.toLowerCase().trim();
             if(!query) {
-                displayDrivers(globalDriversRegistry.slice(0, 60));
+                displayDrivers(globalDriversRegistry);
                 return;
             }
             const matchSet = globalDriversRegistry.filter(d => 
@@ -229,7 +229,7 @@
                 d.familyName.toLowerCase().includes(query) ||
                 d.nationality.toLowerCase().includes(query)
             );
-            displayDrivers(matchSet.slice(0, 100)); // Render up to 100 matches live
+            displayDrivers(matchSet); // Render up to 100 matches live
         }
 
         // ASYNC FETCH 2: Deep Profiler Individual Analysis Stream
