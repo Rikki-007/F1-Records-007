@@ -192,7 +192,7 @@
         async function populateAllHistoricalDrivers() {
             try {
                 // Requesting standard safety ceiling limits to load historical participant structures
-                const response = await fetch(`${baseEndpoint}/drivers.json?limit=10000`);
+                const response = await fetch(`${baseEndpoint}/drivers.json?limit=1000`);
                 const payload = await response.json();
                 globalDriversRegistry = payload.MRData.DriverTable.Drivers;
                 displayDrivers(globalDriversRegistry);// Render initial chunk for performance safety
